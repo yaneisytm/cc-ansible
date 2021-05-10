@@ -1,0 +1,159 @@
+--- 
+- 
+  gather_facts: false
+  hosts: localhost
+  name: "Create an instance"
+  tasks: 
+    - 
+      gcp_compute_disk: 
+        auth_kind: "{{ gcp_cred_kind }}"
+        name: disk-instance
+        project: "{{ gcp_project }}"
+        scopes: 
+          - "https://www.googleapis.com/auth/compute"
+        service_account_file: "{{ gcp_cred_file }}"
+        size_gb: 10
+        source_image: projects/ubuntu-os-cloud/global/images/family/ubuntu-1804-lts
+        state: present
+        zone: "{{ zone }}"
+      name: "create a disk"
+      register: disk
+    - 
+      gcp_compute_disk: 
+        auth_kind: "{{ gcp_cred_kind }}"
+        name: disk-instance-two
+        project: "{{ gcp_project }}"
+        scopes: 
+          - "https://www.googleapis.com/auth/compute"
+        service_account_file: "{{ gcp_cred_file }}"
+        size_gb: 10
+        source_image: projects/ubuntu-os-cloud/global/images/family/ubuntu-1804-lts
+        state: present
+        zone: "{{ zone }}"
+      name: "create a disk two"
+      register: disk2
+    - 
+      gcp_compute_network: 
+        auth_kind: "{{ gcp_cred_kind }}"
+        auto_create_subnetworks: "true"
+        name: network-instance
+        project: "{{ gcp_project }}"
+        scopes: 
+          - "https://www.googleapis.com/auth/compute"
+        service_account_file: "{{ gcp_cred_file }}"
+        state: present
+      name: "create a network"
+      register: network
+    - 
+      gcp_compute_firewall: 
+        allowed: 
+          - 
+            ip_protocol: tcp
+            ports: 
+              - "22"
+        auth_kind: "{{ gcp_cred_kind }}"
+        name: allow-ssh
+        network: "{{ network }}"
+        project: "{{ gcp_project }}"
+        service_account_file: "{{ gcp_cred_file }}"
+        state: present
+        
+      name: "create a firewall ssh"
+    - 
+      gcp_compute_firewall: 
+        allowed: 
+          - 
+            ip_protocol: tcp
+            ports: 
+              - "80"
+        auth_kind: "{{ gcp_cred_kind }}"
+        name: allow-http
+        network: "{{ network }}"
+        project: "{{ gcp_project }}"
+        service_account_file: "{{ gcp_cred_file }}"
+        state: present
+        
+      name: "create a firewall http"
+    - 
+      gcp_compute_address: 
+        auth_kind: "{{ gcp_cred_kind }}"
+        name: address-instance
+        project: "{{ gcp_project }}"
+        region: "{{ region }}"
+        scopes: 
+          - "https://www.googleapis.com/auth/compute"
+        service_account_file: "{{ gcp_cred_file }}"
+        state: present
+      name: "create a address one"
+      register: address
+    - 
+      gcp_compute_address: 
+        auth_kind: "{{ gcp_cred_kind }}"
+        name: address-instance-two
+        project: "{{ gcp_project }}"
+        region: "{{ region }}"
+        scopes: 
+          - "https://www.googleapis.com/auth/compute"
+        service_account_file: "{{ gcp_cred_file }}"
+        state: present
+      name: "create a address two"
+      register: address2
+    - 
+      gcp_compute_instance: 
+        auth_kind: "{{ gcp_cred_kind }}"
+        disks: 
+          - 
+            auto_delete: true
+            boot: true
+            source: "{{ disk }}"
+        machine_type: n1-standard-1
+        name: server
+        network_interfaces: 
+          - 
+            access_configs: 
+              - 
+                name: "External NAT"
+                nat_ip: "{{ address }}"
+                type: ONE_TO_ONE_NAT
+            network: "{{ network }}"
+        project: "{{ gcp_project }}"
+        scopes: 
+          - "https://www.googleapis.com/auth/compute"
+        service_account_file: "{{ gcp_cred_file }}"
+        state: present
+        zone: "{{ zone }}"
+      name: "create a instance one"
+      register: instance
+    - 
+      gcp_compute_instance: 
+        auth_kind: "{{ gcp_cred_kind }}"
+        disks: 
+          - 
+            auto_delete: true
+            boot: true
+            source: "{{ disk2 }}"
+        machine_type: n1-standard-1
+        name: database
+        network_interfaces: 
+          - 
+            access_configs: 
+              - 
+                name: "External NAT 2"
+                nat_ip: "{{ address2 }}"
+                type: ONE_TO_ONE_NAT
+            network: "{{ network }}"
+        project: "{{ gcp_project }}"
+        scopes: 
+          - "https://www.googleapis.com/auth/compute"
+        service_account_file: "{{ gcp_cred_file }}"
+        state: present
+        zone: "{{ zone }}"
+      name: "create a instance two"
+      register: instance2
+    
+  vars: 
+    gcp_cred_file: ~/Yane/keysansibles.json
+    gcp_cred_kind: serviceaccount
+    gcp_project: "1064022129196"
+    region: europe-west1
+    zone: europe-west1-b

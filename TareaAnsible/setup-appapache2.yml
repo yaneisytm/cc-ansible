@@ -1,0 +1,37 @@
+--- 
+- 
+  become: true
+  handlers: 
+    - 
+      name: "restart apache"
+      service: "name=apache2 state=reloaded"
+    - 
+      name: "restart apache"
+      service: "name=apache2 state=restarted"
+  hosts: webservers
+  tasks: 
+    - 
+      name: "Upload application file"
+      ufw: 
+        port: "{{ http_port }}"
+        proto: tcp
+        rule: allow
+    - 
+      dest: "/var/www/local/info.php"
+      name: "Sets Up PHP Info Page"
+      template: 
+        src: files/info.php.j2
+    - 
+      lineinfile: 
+        line: short_open_tag=On
+        path: /etc/php/7.2/cli/php.ini
+        regexp: ^short_open_tag
+      name: "Configure php.ini file"
+      notify: "restart apache"
+  vars:
+    mysql_root_password: "mysql_root_password"
+    app_user: "sammy"
+    http_host: "local"
+    http_conf: "your_domain.conf"
+    http_port: "80"
+    disable_default: true

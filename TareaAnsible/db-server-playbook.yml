@@ -1,0 +1,26 @@
+--- 
+- 
+  become: true
+  hosts: database
+  tasks: 
+    - 
+      mysql_db: 
+        login_password: "admin"
+        login_user: root
+        name: testdb
+        state: present
+      name: "create a new database"
+    - 
+      copy: 
+        dest: /tmp/dump.sql
+        src: dump.sql
+      name: "add sample data to database"
+    - 
+      mysql_db: 
+        login_password: "admin"
+        login_user: root
+        name: testdb
+        state: import
+        target: /tmp/dump.sql
+      name: "insert sample data into database"
+ 

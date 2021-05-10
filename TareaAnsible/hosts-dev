@@ -1,0 +1,5 @@
+
+[webservers]
+weban1 ansible_host=34.76.129.0
+[database]
+weban2 ansible_host=35.195.48.157

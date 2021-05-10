@@ -1,0 +1,5 @@
+--- 
+- hosts: all
+  tasks: 
+    - action: ping
+      name: "Ping a todos los servidores"
